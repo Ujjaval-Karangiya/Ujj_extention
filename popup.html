@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkedIn Comment ID Extractor & Reviewer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-brand">
+        <img src="icon32.png" alt="Logo" class="logo">
+        <div>
+          <h1 class="title">LinkedIn Extractor</h1>
+          <p class="subtitle">Side Panel • 1-by-1 ID Reviewer</p>
+        </div>
+      </div>
+      <div class="header-nav">
+        <button id="tab-extract-btn" class="nav-tab active">Profiles</button>
+        <button id="tab-history-btn" class="nav-tab">History</button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- 1. PROFILES & EXTRACTION VIEW -->
+      <section id="extract-view" class="tab-content active">
+        <!-- 1-BY-1 PINNED REVIEWER SECTION (STAYS PINNED AT TOP) -->
+        <div id="reviewer-card" class="card reviewer-card pinned-section">
+          <div class="reviewer-top-row">
+            <div class="reviewer-counter-group">
+              <span class="reviewer-badge">📌 Pinned Reviewer</span>
+              <span id="review-counter" class="review-counter">Profile 1 of 0</span>
+            </div>
+            <div class="reviewer-status-group">
+              <span id="review-viewed-count" class="review-status-pill">0 viewed</span>
+            </div>
+          </div>
+
+          <div class="reviewer-active-info">
+            <div id="review-active-name" class="review-name">-</div>
+            <div id="review-active-headline" class="review-headline">-</div>
+            <div id="review-active-id-row" class="review-id-row">
+              <span id="review-active-id" class="id-chip" title="Click to copy ID">@id</span>
+            </div>
+          </div>
+
+          <div class="reviewer-controls">
+            <button id="btn-review-prev" class="btn btn-nav" title="Open previous profile in current tab">
+              ◀ Prev
+            </button>
+            <button id="btn-review-open" class="btn btn-nav-open" title="Open active profile in current tab">
+              🌐 Open
+            </button>
+            <button id="btn-review-next" class="btn btn-primary btn-nav-next" title="Open next profile in current tab">
+              Next ▶
+            </button>
+          </div>
+        </div>
+
+        <!-- URL Input Card -->
+        <div class="card input-card">
+          <label for="post-url" class="field-label">LinkedIn Post / Comment URL</label>
+          <div class="input-group">
+            <input type="url" id="post-url" placeholder="https://www.linkedin.com/feed/update/... or /posts/..."
+              spellcheck="false" />
+          </div>
+          <div class="input-helpers">
+            <button id="btn-use-current" class="btn-text">📍 Use Active Tab</button>
+            <button id="btn-paste-url" class="btn-text">📋 Paste</button>
+            <button id="btn-clear-url" class="btn-text">✕ Clear</button>
+          </div>
+
+          <!-- Extraction Options -->
+          <div class="options-group">
+            <label class="checkbox-container">
+              <input type="checkbox" id="chk-auto-expand" checked>
+              <span class="checkmark"></span>
+              <span class="checkbox-label">Auto-expand comments & replies</span>
+            </label>
+          </div>
+
+          <!-- Limit & Rounds Controls (Up to 1000) -->
+          <div class="limits-control-grid">
+            <div class="limit-setting-col">
+              <label for="sel-max-limit" class="setting-mini-label">🎯 Max IDs Limit:</label>
+              <select id="sel-max-limit" class="select-rounds">
+                <option value="50">50 IDs</option>
+                <option value="100">100 IDs</option>
+                <option value="250">250 IDs</option>
+                <option value="500">500 IDs</option>
+                <option value="1000" selected>1000 IDs (Max)</option>
+                <option value="custom">Custom...</option>
+              </select>
+              <input type="number" id="input-custom-limit" class="input-custom-limit hidden" min="1" max="1000"
+                value="1000" placeholder="Up to 1000" />
+            </div>
+
+            <div class="limit-setting-col">
+              <label for="sel-max-rounds" class="setting-mini-label">🔄 Expand Rounds:</label>
+              <select id="sel-max-rounds" class="select-rounds">
+                <option value="25">25 rounds</option>
+                <option value="50">50 rounds</option>
+                <option value="100" selected>100 rounds</option>
+                <option value="250">250 rounds</option>
+                <option value="500">500 rounds</option>
+                <option value="1000">1000 rounds (Deep)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button id="btn-start" class="btn btn-primary">
+              <span class="btn-icon">🚀</span> Auto-Expand & Extract All
+            </button>
+            <button id="btn-quick" class="btn btn-secondary">
+              <span class="btn-icon">⚡</span> Quick Scan Visible
+            </button>
+            <button id="btn-stop" class="btn btn-danger hidden">
+              <span class="btn-icon">⏹</span> Stop Extraction
+            </button>
+          </div>
+        </div>
+
+        <!-- Status & Progress Indicator -->
+        <div id="status-card" class="status-card hidden">
+          <div class="status-indicator">
+            <div class="spinner" id="status-spinner"></div>
+            <div class="status-text-wrapper">
+              <div id="status-title" class="status-title">Processing...</div>
+              <div id="status-detail" class="status-detail">Scanning comments</div>
+            </div>
+          </div>
+          <div class="progress-bar-container">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+        </div>
+
+        <!-- Results Header -->
+        <div class="results-header">
+          <div class="results-title-group">
+            <h2 class="section-title">Extracted Profiles</h2>
+            <span id="badge-count" class="badge">0 IDs</span>
+          </div>
+          <input type="text" id="search-filter" class="search-input" placeholder="🔍 Filter name or ID..." />
+        </div>
+
+        <!-- Export Toolbar -->
+        <div class="toolbar">
+          <button id="btn-copy-ids" class="tool-btn" title="Copy raw LinkedIn IDs">📋 Copy IDs</button>
+          <button id="btn-copy-urls" class="tool-btn" title="Copy full Profile URLs">🔗 Copy URLs</button>
+          <button id="btn-export-csv" class="tool-btn" title="Export CSV spreadsheet">📥 CSV</button>
+          <button id="btn-export-json" class="tool-btn" title="Export JSON">📄 JSON</button>
+          <button id="btn-clear-results" class="tool-btn tool-btn-danger" title="Clear current results">🗑️</button>
+        </div>
+
+        <!-- Profiles List Container -->
+        <div id="profiles-container" class="profiles-container">
+          <div id="empty-state" class="empty-state">
+            <div class="empty-icon">💬</div>
+            <p class="empty-title">No LinkedIn IDs extracted yet</p>
+            <p class="empty-subtitle">Extract comments from a post to review profiles one by one.</p>
+          </div>
+          <ul id="profiles-list" class="profiles-list"></ul>
+        </div>
+      </section>
+
+      <!-- 2. HISTORY TAB VIEW -->
+      <section id="history-view" class="tab-content">
+        <div class="history-header">
+          <h2 class="section-title">Saved Sessions</h2>
+          <button id="btn-clear-history" class="btn-text btn-text-danger">Clear All</button>
+        </div>
+        <div id="history-container" class="history-container">
+          <div id="history-empty" class="empty-state">
+            <div class="empty-icon">📜</div>
+            <p class="empty-title">No saved sessions</p>
+            <p class="empty-subtitle">Your extraction sessions will be stored here.</p>
+          </div>
+          <ul id="history-list" class="history-list"></ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden">Copied to clipboard!</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>
